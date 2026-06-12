@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sleepwave — Expanded States</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    min-height: 100%;
+    background: #12122b;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #12122b;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 32px 16px 48px;
+  }
+
+  .phone {
+    width: 390px;
+    min-height: 844px;
+    background: #12122b;
+    border-radius: 44px;
+    border: 1px solid rgba(255,255,255,0.12);
+    overflow: hidden;
+    padding: 20px 0 28px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+    position: relative;
+  }
+
+  .topbar {
+    padding: 0 20px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .topbar-date { color: rgba(255,255,255,0.9); font-size: 18px; font-weight: 500; }
+  .topbar-sub  { color: rgba(255,255,255,0.4); font-size: 13px; }
+
+  /* Cards */
+  .card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    margin: 0 12px 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .card:hover { background: rgba(255,255,255,0.07); }
+  .card-inner  { padding: 18px 18px 0; }
+  .card-footer { padding: 6px 18px 20px; }
+
+  /* Header row */
+  .hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .hdr-title { color: white; font-size: 17px; font-weight: 500; }
+  .hdr-val    { color: rgba(255,255,255,0.9); font-size: 20px; font-weight: 500; }
+  .hdr-sub    { color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 700; }
+  .hdr-note   { color: rgba(255,255,255,0.4); font-size: 12px; }
+  .chevron    { color: rgba(255,255,255,0.35); font-size: 16px; transition: transform 0.3s; display: inline-block; margin-left: 4px; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* Layout helpers */
+  .divider { height: 1px; background: rgba(255,255,255,0.08); margin: 16px 0; }
+  .slbl { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 8px; letter-spacing: 0.3px; }
+
+  /* Expand/collapse */
+  .exp { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .exp.open { max-height: 3000px; }
+
+  /* Metric rows */
+  .metric-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.07);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: rgba(255,255,255,0.6);
+    font-size: 17px;
+  }
+  .metric-label { color: rgba(255,255,255,0.5); font-size: 14px; flex: 1; }
+  .metric-val   { color: white; font-size: 16px; font-weight: 500; }
+
+  /* Insight box */
+  .insight { background: rgba(255,255,255,0.07); border-radius: 13px; padding: 14px 15px; }
+  .insight-title { color: white; font-size: 15px; font-weight: 500; margin-bottom: 5px; }
+  .insight-body  { color: rgba(255,255,255,0.65); font-size: 14px; line-height: 1.6; }
+
+  /* Dot labels */
+  .dot-label { display: flex; align-items: center; gap: 5px; font-size: 12px; color: rgba(255,255,255,0.5); }
+  .dot8 { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Donut score */
+  .donut-wrap   { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+  .donut-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; pointer-events: none; }
+  .donut-num    { font-size: 30px; font-weight: 700; color: #65c6c6; line-height: 1; }
+  .donut-lbl    { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+  .score-row    { display: flex; align-items: center; gap: 18px; margin: 4px 0 2px; }
+  .score-right  { flex: 1; }
+  .score-title  { font-size: 16px; font-weight: 500; color: white; }
+  .score-sub    { font-size: 13px; color: rgba(255,255,255,0.45); margin-top: 4px; }
+
+  /* Mini stat cards */
+  .mini-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 4px 0; }
+  .mini-stat  { background: rgba(255,255,255,0.06); border-radius: 9px; padding: 10px 8px; text-align: center; }
+  .mini-stat-lbl { font-size: 10px; color: rgba(255,255,255,0.4); margin-bottom: 3px; }
+  .mini-stat-val { font-size: 17px; font-weight: 500; color: white; }
+
+  /* Bar rows */
+  .bar-row { margin: 4px 0 10px; }
+  .bar-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+  .bar-track { height: 5px; background: rgba(255,255,255,0.12); border-radius: 3px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 3px; }
+
+  /* Journal */
+  .journal-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 18px;
+    margin-bottom: 8px;
+  }
+  .journal-left { display: flex; align-items: center; gap: 10px; }
+  .journal-name { color: white; font-size: 15px; }
+  .journal-meta { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+  .add-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 17px; flex-shrink: 0;
+  }
+  .goal-track { height: 5px; background: rgba(255,255,255,0.12); border-radius: 3px; overflow: hidden; margin: 6px 0 12px; }
+  .chart-wrap { position: relative; width: 100%; margin: 6px 0 4px; }
+</style>
+</head>
+<body>
+<div class="phone" id="app">
+  <div class="topbar">
+    <span class="topbar-date">Wednesday <span style="color:rgba(255,255,255,0.4);font-size:13px;font-weight:400;">26 Apr</span></span>
+    <span class="topbar-sub">Expanded states</span>
+  </div>
+
+  <!-- ── SLEEP ── -->
+  <div class="card" onclick="tog('sleep')">
+    <div class="card-inner">
+      <div class="hdr">
+        <span class="hdr-title">Sleep</span>
+        <span><span class="hdr-val">8h 22m</span><span class="chevron" id="ch-sleep">▾</span></span>
+      </div>
+      <div style="display:flex;gap:16px;padding-bottom:14px;">
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);">Asleep <span style="color:rgba(255,255,255,0.8);font-weight:500;">23:46</span></div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);">Awake <span style="color:rgba(255,255,255,0.8);font-weight:500;">07:00</span></div>
+      </div>
+      <!-- Score + phases always visible -->
+      <div class="divider" style="margin-bottom:14px;"></div>
+      <div class="score-row">
+        <div class="donut-wrap">
+          <canvas id="donut" width="110" height="110"></canvas>
+          <div class="donut-center"><div class="donut-num">82</div><div class="donut-lbl">score</div></div>
+        </div>
+        <div class="score-right">
+          <div class="score-title">Sleep quality</div>
+          <div class="score-sub">Above average night</div>
+          <div style="margin-top:10px;"><span style="background:rgba(101,198,198,0.15);border-radius:20px;padding:4px 10px;font-size:12px;color:#65c6c6;font-weight:500;">Good</span></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="slbl">Sleep phases across the night</div>
+      <div class="chart-wrap" style="height:100px;">
+        <canvas id="phasesChart"></canvas>
+      </div>
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin:6px 0 14px;">
+        <span class="dot-label"><span class="dot8" style="background:#f7c8a2;"></span>Awake 1%</span>
+        <span class="dot-label"><span class="dot8" style="background:#c9f2ff;"></span>REM 21%</span>
+        <span class="dot-label"><span class="dot8" style="background:#5d9be8;"></span>Core 54%</span>
+        <span class="dot-label"><span class="dot8" style="background:#8e31f5;"></span>Deep 24%</span>
+      </div>
+    </div>
+    <div class="exp" id="exp-sleep">
+      <div class="card-inner" style="padding-top:0;">
+        <div class="divider" style="margin-top:0;"></div>
+        <div class="metric-row">
+          <div class="metric-icon"><i class="ti ti-bed"></i></div>
+          <span class="metric-label">Time in bed</span><span class="metric-val">9h 18m</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon"><i class="ti ti-moon"></i></div>
+          <span class="metric-label">Time to fall asleep</span><span class="metric-val">12 min</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon"><i class="ti ti-rotate-clockwise"></i></div>
+          <span class="metric-label">Sleep cycles</span><span class="metric-val">4 cycles</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon"><i class="ti ti-eye"></i></div>
+          <span class="metric-label">Wake-ups</span><span class="metric-val">2 times</span>
+        </div>
+      </div>
+      <div class="card-footer" style="padding-top:16px;">
+        <div class="insight">
+          <div class="insight-title">Good deep sleep</div>
+          <div class="insight-body">Your 24% deep sleep is above average — great for physical recovery and memory consolidation. Keep your current sleep schedule to maintain this.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MOVEMENT ── -->
+  <div class="card" onclick="tog('mvmt')">
+    <div class="card-inner">
+      <div class="hdr">
+        <span class="hdr-title">Movement</span>
+        <span><span class="hdr-val">2<span class="hdr-sub"> m</span></span><span class="chevron" id="ch-mvmt">▾</span></span>
+      </div>
+      <div style="padding-bottom:12px;" class="hdr-note">Low movement — restful night</div>
+    </div>
+    <div class="exp" id="exp-mvmt">
+      <div class="card-inner" style="padding-top:0;">
+        <div class="divider" style="margin-top:0;"></div>
+        <div class="slbl">Movement intensity across the night</div>
+        <div class="chart-wrap" style="height:90px;">
+          <canvas id="mvmtChart"></canvas>
+        </div>
+        <div class="divider"></div>
+        <div class="metric-row">
+          <div class="metric-icon"><i class="ti ti-activity"></i></div>
+          <span class="metric-label">Total movement</span><span class="metric-val">2 min</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon"><i class="ti ti-pulse"></i></div>
+          <span class="metric-label">Movement events</span><span class="metric-val">4 events</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon"><i class="ti ti-clock"></i></div>
+          <span class="metric-label">Longest still period</span><span class="metric-val">3h 12m</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon"><i class="ti ti-alarm"></i></div>
+          <span class="metric-label">Most restless</span><span class="metric-val">~05:40</span>
+        </div>
+        <div class="divider"></div>
+        <div class="slbl">Movement by sleep stage</div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(142,49,245,0.15);color:#8e31f5;"><i class="ti ti-zzz"></i></div>
+          <span class="metric-label">Deep sleep</span><span class="metric-val">0 min</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(93,155,232,0.15);color:#5d9be8;"><i class="ti ti-zzz"></i></div>
+          <span class="metric-label">Core sleep</span><span class="metric-val">1 min</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(201,242,255,0.12);color:#c9f2ff;"><i class="ti ti-zzz"></i></div>
+          <span class="metric-label">REM</span><span class="metric-val">1 min</span>
+        </div>
+      </div>
+      <div class="card-footer" style="padding-top:16px;">
+        <div class="insight">
+          <div class="insight-title">Very still night</div>
+          <div class="insight-body">Only 2 min of movement across 8h — low movement correlates with restorative sleep.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SOUNDS ── -->
+  <div class="card" onclick="tog('sounds')">
+    <div class="card-inner">
+      <div class="hdr">
+        <span class="hdr-title">Sounds</span>
+        <span><span class="hdr-val">32<span class="hdr-sub"> clips</span></span><span class="chevron" id="ch-sounds">▾</span></span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;padding-bottom:12px;">
+        <span style="background:rgba(255,255,255,0.1);border-radius:14px;padding:3px 9px;font-size:11px;color:white;display:flex;align-items:center;gap:4px;"><span class="dot8" style="background:#dd6a8a;"></span>15 snoring</span>
+        <span style="background:rgba(255,255,255,0.1);border-radius:14px;padding:3px 9px;font-size:11px;color:white;display:flex;align-items:center;gap:4px;"><span class="dot8" style="background:#62c394;"></span>5 voice</span>
+        <span style="background:rgba(255,255,255,0.1);border-radius:14px;padding:3px 9px;font-size:11px;color:white;display:flex;align-items:center;gap:4px;"><span class="dot8" style="background:#f0a078;"></span>5 movement</span>
+      </div>
+    </div>
+    <div class="exp" id="exp-sounds">
+      <div class="card-inner" style="padding-top:0;">
+        <div class="divider" style="margin-top:0;"></div>
+        <div class="slbl">Sound activity across the night</div>
+        <div class="chart-wrap" style="height:90px;">
+          <canvas id="soundChart"></canvas>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin:4px 0 4px;">
+          <span class="dot-label"><span class="dot8" style="background:#dd6a8a;"></span>Snoring</span>
+          <span class="dot-label"><span class="dot8" style="background:#62c394;border:1px dashed #62c394;background:transparent;"></span>Voice</span>
+          <span class="dot-label"><span class="dot8" style="background:#f0a078;border:1px dashed #f0a078;background:transparent;"></span>Movement</span>
+        </div>
+        <div class="divider"></div>
+        <div class="slbl">By type</div>
+        <div class="bar-row">
+          <div class="bar-label-row"><span class="dot-label"><span class="dot8" style="background:#dd6a8a;"></span>Snoring</span><span class="metric-val" style="font-size:14px;">15 clips</span></div>
+          <div class="bar-track"><div class="bar-fill" style="background:#dd6a8a;width:47%;"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label-row"><span class="dot-label"><span class="dot8" style="background:#62c394;"></span>Voice</span><span class="metric-val" style="font-size:14px;">5 clips</span></div>
+          <div class="bar-track"><div class="bar-fill" style="background:#62c394;width:16%;"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label-row"><span class="dot-label"><span class="dot8" style="background:#f0a078;"></span>Movement</span><span class="metric-val" style="font-size:14px;">5 clips</span></div>
+          <div class="bar-track"><div class="bar-fill" style="background:#f0a078;width:16%;"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label-row"><span class="dot-label"><span class="dot8" style="background:#467898;"></span>Background</span><span class="metric-val" style="font-size:14px;">6 clips</span></div>
+          <div class="bar-track"><div class="bar-fill" style="background:#467898;width:19%;"></div></div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon"><i class="ti ti-chart-line"></i></div>
+          <span class="metric-label">Peak snoring period</span><span class="metric-val">02:00–04:00</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon"><i class="ti ti-volume-off"></i></div>
+          <span class="metric-label">Quietest period</span><span class="metric-val">05:00–06:30</span>
+        </div>
+      </div>
+      <div class="card-footer" style="padding-top:16px;">
+        <div class="insight">
+          <div class="insight-title">Snoring detected</div>
+          <div class="insight-body">15 snoring clips, mostly between 01:00–04:00. Sleep efficiency was still high at 89%.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BREATHING RATE ── -->
+  <div class="card" onclick="tog('br')">
+    <div class="card-inner">
+      <div class="hdr">
+        <span class="hdr-title">Breathing rate</span>
+        <span><span class="hdr-val">12.6<span class="hdr-sub"> brpm</span></span><span class="chevron" id="ch-br">▾</span></span>
+      </div>
+      <div style="padding-bottom:12px;" class="hdr-note">Normal range · 12–20 brpm</div>
+    </div>
+    <div class="exp" id="exp-br">
+      <div class="card-inner" style="padding-top:0;">
+        <div class="divider" style="margin-top:0;"></div>
+        <div class="slbl">Breathing rate across the night</div>
+        <div class="chart-wrap" style="height:90px;">
+          <canvas id="brChart"></canvas>
+        </div>
+        <div class="divider"></div>
+        <div class="mini-stats">
+          <div class="mini-stat"><div class="mini-stat-lbl">Average</div><div class="mini-stat-val" style="color:#5db3e8;">12.6</div></div>
+          <div class="mini-stat"><div class="mini-stat-lbl">Lowest</div><div class="mini-stat-val">11.2</div></div>
+          <div class="mini-stat"><div class="mini-stat-lbl">Highest</div><div class="mini-stat-val">15.8</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="slbl">By sleep stage</div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(142,49,245,0.15);color:#8e31f5;"><i class="ti ti-zzz"></i></div>
+          <span class="metric-label">Deep sleep</span><span class="metric-val">11.2 brpm</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(93,155,232,0.15);color:#5d9be8;"><i class="ti ti-zzz"></i></div>
+          <span class="metric-label">Core sleep</span><span class="metric-val">12.8 brpm</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(201,242,255,0.12);color:#c9f2ff;"><i class="ti ti-zzz"></i></div>
+          <span class="metric-label">REM</span><span class="metric-val">14.1 brpm</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(247,200,162,0.12);color:#f7c8a2;"><i class="ti ti-sun"></i></div>
+          <span class="metric-label">Awake</span><span class="metric-val">15.8 brpm</span>
+        </div>
+      </div>
+      <div class="card-footer" style="padding-top:16px;">
+        <div class="insight">
+          <div class="insight-title">Healthy breathing</div>
+          <div class="insight-body">Your rate dips during deep sleep as expected — a good sign of restorative rest.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BREATHING DISRUPTIONS ── -->
+  <div class="card" onclick="tog('bd')">
+    <div class="card-inner">
+      <div class="hdr">
+        <span class="hdr-title">Breathing disruptions</span>
+        <span><span class="hdr-val">2<span class="hdr-sub"> /h</span></span><span class="chevron" id="ch-bd">▾</span></span>
+      </div>
+      <div style="padding-bottom:12px;font-size:13px;color:#65c6c6;font-weight:500;">Not elevated</div>
+    </div>
+    <div class="exp" id="exp-bd">
+      <div class="card-inner" style="padding-top:0;">
+        <div class="divider" style="margin-top:0;"></div>
+        <div class="slbl">Disruption events across the night</div>
+        <div class="chart-wrap" style="height:90px;">
+          <canvas id="bdChart"></canvas>
+        </div>
+        <div class="divider"></div>
+        <div class="mini-stats">
+          <div class="mini-stat"><div class="mini-stat-lbl">AHI</div><div class="mini-stat-val" style="color:#65c6c6;">2.1</div></div>
+          <div class="mini-stat"><div class="mini-stat-lbl">Total events</div><div class="mini-stat-val">17</div></div>
+          <div class="mini-stat"><div class="mini-stat-lbl">Avg duration</div><div class="mini-stat-val">8s</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="slbl">By sleep stage</div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(142,49,245,0.15);color:#8e31f5;"><i class="ti ti-zzz"></i></div>
+          <span class="metric-label">Deep sleep</span><span class="metric-val">0 events</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(93,155,232,0.15);color:#5d9be8;"><i class="ti ti-zzz"></i></div>
+          <span class="metric-label">Core sleep</span><span class="metric-val">9 events</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(201,242,255,0.12);color:#c9f2ff;"><i class="ti ti-zzz"></i></div>
+          <span class="metric-label">REM</span><span class="metric-val">6 events</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-icon" style="background:rgba(247,200,162,0.12);color:#f7c8a2;"><i class="ti ti-sun"></i></div>
+          <span class="metric-label">Awake</span><span class="metric-val">2 events</span>
+        </div>
+      </div>
+      <div class="card-footer" style="padding-top:16px;">
+        <div class="insight">
+          <div class="insight-title">Well within normal range</div>
+          <div class="insight-body">An AHI below 5 is healthy. No action needed — keep monitoring over time.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── JOURNAL ── -->
+  <div class="card" onclick="tog('journal')">
+    <div class="card-inner">
+      <div class="hdr">
+        <span class="hdr-title">Journal</span>
+        <span class="chevron" id="ch-journal">▾</span>
+      </div>
+      <div style="padding-bottom:12px;" class="hdr-note">Activities · Dreams · Goals</div>
+    </div>
+    <div class="exp" id="exp-journal">
+      <div class="card-inner" style="padding-top:0;">
+        <div class="divider" style="margin-top:0;"></div>
+        <div class="journal-row">
+          <div class="journal-left">
+            <div class="metric-icon" style="background:rgba(240,160,120,0.15);color:#f0a078;"><i class="ti ti-run"></i></div>
+            <div><div class="journal-name">Activities</div><div class="journal-meta">0 logged · Tap to add</div></div>
+          </div>
+          <div class="add-btn">+</div>
+        </div>
+        <div class="journal-row">
+          <div class="journal-left">
+            <div class="metric-icon" style="background:rgba(201,242,255,0.12);color:#c9f2ff;"><i class="ti ti-message-circle"></i></div>
+            <div><div class="journal-name">Dreams</div><div class="journal-meta">0 logged · Tap to add</div></div>
+          </div>
+          <div class="add-btn">+</div>
+        </div>
+        <div class="journal-row">
+          <div class="journal-left">
+            <div class="metric-icon" style="background:rgba(101,198,198,0.15);color:#65c6c6;"><i class="ti ti-target"></i></div>
+            <div><div class="journal-name">Goals</div><div class="journal-meta">0 set · Tap to add</div></div>
+          </div>
+          <div class="add-btn">+</div>
+        </div>
+        <div class="divider"></div>
+        <div class="slbl">Sleep goal progress</div>
+        <div class="metric-row" style="border:none;padding-bottom:4px;">
+          <div class="metric-icon"><i class="ti ti-target"></i></div>
+          <span class="metric-label">Target sleep time</span><span class="metric-val">8h 00m</span>
+        </div>
+        <div class="goal-track"><div style="height:100%;width:100%;background:#65c6c6;border-radius:3px;"></div></div>
+        <div class="metric-row" style="border:none;">
+          <div class="metric-icon"><i class="ti ti-flame"></i></div>
+          <span class="metric-label">Goal streak</span><span class="metric-val">3 nights</span>
+        </div>
+      </div>
+      <div class="card-footer" style="padding-top:16px;">
+        <div class="insight">
+          <div class="insight-title">Goal achieved</div>
+          <div class="insight-body">You hit your 8h sleep target tonight. You're on a 3-night streak — keep it up.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+var opened = {};
+var nightLabels = ['23:46','00:30','01:00','01:30','02:00','02:30','03:00','03:30','04:00','04:30','05:00','05:30','06:00','06:30','07:00'];
+
+window.addEventListener('load', function() {
+  setTimeout(function(){ buildChart('sleep'); opened['sleep'] = true; }, 150);
+});
+
+function tog(id) {
+  var exp  = document.getElementById('exp-' + id);
+  var ch   = document.getElementById('ch-' + id);
+  var isOpen = exp.classList.contains('open');
+  exp.classList.toggle('open', !isOpen);
+  ch.classList.toggle('open', !isOpen);
+  if (!isOpen && !opened[id]) {
+    opened[id] = true;
+    setTimeout(function(){ buildChart(id); }, 60);
+  }
+}
+
+function buildChart(id) {
+
+  if (id === 'sleep') {
+    new Chart(document.getElementById('donut').getContext('2d'), {
+      type: 'doughnut',
+      data: { datasets: [{ data: [82, 18], backgroundColor: ['#65c6c6','rgba(255,255,255,0.08)'], borderWidth: 0 }] },
+      options: { responsive: false, cutout: '68%', rotation: -90, plugins: { legend:{display:false}, tooltip:{enabled:false} } }
+    });
+
+    var pc   = document.getElementById('phasesChart');
+    var pctx = pc.getContext('2d');
+    var phaseVals = [2,3,4,4,3,4,4,2,1,3,4,3,2,4,4,3,1,2,3,4,3,2,3,2,1,3,4,3,2,3];
+    var tLabels = [];
+    for (var i = 0; i < phaseVals.length; i++) {
+      var mins = Math.round(i * (502 / (phaseVals.length - 1)));
+      var h = Math.floor((23*60+46+mins)/60) % 24;
+      var m = (23*60+46+mins) % 60;
+      if (i === 0) tLabels.push('23:46');
+      else if (i === phaseVals.length-1) tLabels.push('07:00');
+      else if (i % 6 === 0) tLabels.push((h<10?'0':'')+h+':'+(m<10?'0':'')+m);
+      else tLabels.push('');
+    }
+    var w = pc.offsetWidth || 320;
+    var lineGrad = pctx.createLinearGradient(0,0,w,0);
+    lineGrad.addColorStop(0,    '#5d9be8');
+    lineGrad.addColorStop(0.15, '#8e31f5');
+    lineGrad.addColorStop(0.35, '#5d9be8');
+    lineGrad.addColorStop(0.5,  '#c9f2ff');
+    lineGrad.addColorStop(0.65, '#8e31f5');
+    lineGrad.addColorStop(0.78, '#5d9be8');
+    lineGrad.addColorStop(0.9,  '#c9f2ff');
+    lineGrad.addColorStop(1,    '#f7c8a2');
+    var ch = pc.offsetHeight || 100;
+    var fillGrad = pctx.createLinearGradient(0, 0, 0, ch);
+    fillGrad.addColorStop(0, 'rgba(93,155,232,0.0)');
+    fillGrad.addColorStop(1, 'rgba(93,155,232,0.28)');
+    new Chart(pctx, {
+      type: 'line',
+      data: { labels: tLabels, datasets: [{ data: phaseVals, borderColor: lineGrad, backgroundColor: fillGrad, borderWidth: 2, pointRadius: 0, tension: 0.45, fill: true }] },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        scales:{ x:{grid:{display:false},ticks:{color:'rgba(255,255,255,0.3)',font:{size:10},maxRotation:0,autoSkip:false},border:{display:false}}, y:{display:false,min:0.5,max:4.5,reverse:true} }
+      }
+    });
+  }
+
+  if (id === 'mvmt') {
+    new Chart(document.getElementById('mvmtChart').getContext('2d'), {
+      type: 'line',
+      data: { labels: nightLabels, datasets: [{ data:[0,0,0,0.3,0.1,0,0.8,0.2,0,0.1,0,1.2,0.4,0.1,0], borderColor:'#65c6c6', backgroundColor:'rgba(101,198,198,0.15)', borderWidth:1.5, pointRadius:0, tension:0.4, fill:true }] },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        scales:{ x:{grid:{display:false},ticks:{color:'rgba(255,255,255,0.3)',font:{size:10},maxTicksLimit:5,maxRotation:0},border:{display:false}}, y:{display:false,min:0,max:1.6} }
+      }
+    });
+  }
+
+  if (id === 'sounds') {
+    new Chart(document.getElementById('soundChart').getContext('2d'), {
+      type: 'line',
+      data: { labels: nightLabels, datasets: [
+        { label:'Snoring',  data:[0,0,0.2,0.8,1.0,0.9,0.6,0.5,0.3,0.2,0,0,0,0,0],   borderColor:'#dd6a8a', backgroundColor:'rgba(221,106,138,0.18)', borderWidth:1.5, pointRadius:0, tension:0.4, fill:true },
+        { label:'Voice',    data:[0,0,0,0.2,0,0.1,0,0.3,0,0,0.2,0,0,0,0],            borderColor:'#62c394', backgroundColor:'transparent', borderWidth:1.5, pointRadius:0, tension:0.3, fill:false, borderDash:[4,3] },
+        { label:'Movement', data:[0,0.1,0,0,0.3,0,0.1,0,0.4,0,0,0.2,0,0,0],          borderColor:'#f0a078', backgroundColor:'transparent', borderWidth:1.5, pointRadius:0, tension:0.3, fill:false, borderDash:[2,4] }
+      ]},
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        scales:{ x:{grid:{display:false},ticks:{color:'rgba(255,255,255,0.3)',font:{size:10},maxTicksLimit:5,maxRotation:0},border:{display:false}}, y:{display:false,min:0,max:1.4} }
+      }
+    });
+  }
+
+  if (id === 'br') {
+    new Chart(document.getElementById('brChart').getContext('2d'), {
+      type: 'line',
+      data: { labels: nightLabels, datasets: [{ data:[15.2,14.8,13.1,12.4,11.8,11.2,11.9,12.2,13.0,13.4,14.1,15.8,13.9,13.2,13.8], borderColor:'#5db3e8', backgroundColor:'rgba(93,179,232,0.12)', borderWidth:1.5, pointRadius:0, tension:0.4, fill:true }] },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        scales:{ x:{grid:{display:false},ticks:{color:'rgba(255,255,255,0.3)',font:{size:10},maxTicksLimit:5,maxRotation:0},border:{display:false}}, y:{min:10,max:18,grid:{color:'rgba(255,255,255,0.06)'},ticks:{color:'rgba(255,255,255,0.3)',font:{size:10},stepSize:4},border:{display:false}} }
+      }
+    });
+  }
+
+  if (id === 'bd') {
+    new Chart(document.getElementById('bdChart').getContext('2d'), {
+      type: 'bar',
+      data: { labels:['23:46','01:00','02:00','03:00','04:00','05:00','06:00','07:00'], datasets:[{ data:[0,2,4,3,3,2,2,1], backgroundColor:'rgba(101,198,198,0.45)', borderColor:'#65c6c6', borderWidth:1, borderRadius:3, borderSkipped:false, barPercentage:0.6 }] },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        scales:{ x:{grid:{display:false},ticks:{color:'rgba(255,255,255,0.3)',font:{size:10},maxRotation:0,autoSkip:false},border:{display:false}}, y:{display:false,min:0,max:6} }
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>
